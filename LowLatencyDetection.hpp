@@ -1,21 +1,18 @@
-/**
- * @file LowLatencyDetection.hpp
- * @brief Sub-microsecond Hardware Bit-Masking & Signal Classification Engine
- */
+// brief Sub-microsecond Hardware Bit-Masking & Signal Classification Engine
 
 #ifndef LOW_LATENCY_DETECTION_HPP
 #define LOW_LATENCY_DETECTION_HPP
 
 #include <cstdint>
 
-// 신호 무결성 상태 정의
+// defining the signal's integrity / validation
 enum class SignalIntegrity : uint8_t {
-    VALID,          // 정상 생체 신호
-    NOISE,          // 허용 범위 내의 순간적 전기 노이즈
-    SPOOFED_ATTACK  // 전압 피싱 / 스푸핑 악성 신호
+    VALID,          // normal, valid signal
+    NOISE,          // an electric noise, made suddenly, but ain't malicious
+    SPOOFED_ATTACK  // malicious signal: an attack!!!
 };
 
-// 텔레메트리 결과 구조체
+// result
 struct SignalTelemetry {
     uint16_t raw_adc;
     uint16_t processed_adc;
@@ -25,22 +22,24 @@ struct SignalTelemetry {
 
 class LowLatencyDetector {
 private:
-    static constexpr uint16_t ECG_MIN_SAFE = 600;     // 최소 안전 전압
-    static constexpr uint16_t ECG_MAX_SAFE = 3200;    // 최대 안전 전압
-    static constexpr uint16_t ATTACK_THRESHOLD = 3800; // 피싱 공격 임계값
+    static constexpr uint16_t ECG_MIN_SAFE = 600;     // safe volatge's min
+    static constexpr uint16_t ECG_MAX_SAFE = 3200;    // safe voltage's max value
+    static constexpr uint16_t ATTACK_THRESHOLD = 3800; // threshold value that determine it's an attack
 
 public:
     LowLatencyDetector() = default;
 
-    /**
-     * @brief Inline Assembly 기반 Raw ADC 레지스터 12-bit 비트 마스킹 (0x0FFF)
-     */
+    // Inline Assembly made for Raw ADC register: 12bit masking(0x0FFF)
     [[nodiscard]] static inline uint16_t parse_adc_register(uint16_t raw_value) noexcept {
+        // nodiscard: do not discard the function's return value -> we do not need to call this function outside
+        // inline function: insert this function into where it was called -> no need to generate and destroy a stack frame for this function = function overhead successfully eliminated
+        // noexcept: do not handle exception -> this might cause a problem?
         uint16_t masked_value = 0;
 #if defined(__x86_64__) || defined(_M_X64)
         __asm__ volatile (
+        //volatile: complier, do not optimize it. use this, my code
             "movw %1, %%ax \n\t"
-            "andw $0x0FFF, %%ax \n\t"
+            "andw $0x0FFF, %%ax \n\t" //and gate's function: masking, within a single CCL
             "movw %%ax, %0 \n\t"
             : "=r" (masked_value)
             : "r" (raw_value)
@@ -52,10 +51,15 @@ public:
         return masked_value;
     }
 
-    /**
-     * @brief 신호 무결성 판별
-     */
-    [[nodiscard]] inline SignalIntegrity evaluate(uint16_t adc) const noexcept {
+/* instead of simply coding
+    uint16_t maked_value = raw_value & 0x0FFF; a cpp code that the computer will automatically compile and inteprete it to assembly language(and, move, etc...)
+    i wanted to directly use the register ax
+    to not store the variable to the memory(RAM/stack) and call it -> since it takes microseconds for a couple of CPU cycles, which can cause latency
+
+*/
+
+    // determine signal's integrity
+[[nodiscard]] inline SignalIntegrity evaluate(uint16_t adc) const noexcept {
         if (adc >= ATTACK_THRESHOLD) {
             return SignalIntegrity::SPOOFED_ATTACK;
         }
@@ -66,4 +70,4 @@ public:
     }
 };
 
-#endif // LOW_LATENCY_DETECTION_HPP
+#endif
