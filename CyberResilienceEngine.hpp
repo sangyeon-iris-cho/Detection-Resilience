@@ -1,7 +1,4 @@
-/**
- * @file CyberResilienceEngine.hpp
- * @brief Zero-Downtime Safe-Fail State Machine & Synthetic Fallback Manager
- */
+// Zero-Downtime Safe-Fail State Machine & Synthetic Fallback Manager
 
 #ifndef CYBER_RESILIENCE_ENGINE_HPP
 #define CYBER_RESILIENCE_ENGINE_HPP
@@ -11,8 +8,8 @@
 #include <atomic>
 
 enum class OperatingState : uint8_t {
-    NORMAL_OPERATION,  // 정상 주회로 가동
-    SAFE_FAIL_MODE     // 합성 백업 신호 가동 (Zero-Downtime)
+    NORMAL_OPERATION,  // to operate the general circuit, when no attack is done.
+    SAFE_FAIL_MODE     // synthetic backup circuit for Zero-Downtime
 };
 
 class CyberResilienceEngine {
@@ -23,17 +20,15 @@ private:
     uint64_t total_processed_packets{0};
     uint64_t total_attacks_mitigated{0};
 
-    // 백업 모드용 안전 기준 전압(1500mV) 생성
+    // 1500mV is the safe standard. if attack happened, set the SAFE_FAIL_MODE's safe voltage
     [[nodiscard]] inline uint16_t generate_safe_synthetic_signal() const noexcept {
-        return 1500; 
+        return 1500; //why 1500mV?: ADC is 12bit, input ranging from 0~2^12 = 4095. 1500mV is located at the middle, safe and sound, solid :)
     }
 
 public:
     CyberResilienceEngine() = default;
 
-    /**
-     * @brief 실시간 신호 파이프라인 처리 및 Safe-Fail 복구
-     */
+    // Signal Pipeline & SAFE_FAIL_MODE
     SignalTelemetry process_packet(uint16_t raw_packet) noexcept {
         const auto start_time = std::chrono::high_resolution_clock::now();
 
@@ -50,7 +45,7 @@ public:
             case SignalIntegrity::VALID:
                 consecutive_noise_count = 0;
                 if (current_state.load(std::memory_order_relaxed) == OperatingState::SAFE_FAIL_MODE) {
-                    // 신호가 안정화되면 정상 모드로 자가 복구 (Self-Healing)
+                    // if relaxed, meaning the signal is back to normal, make the system to SAFE_FAIL_MODE (Self-Healing)
                     current_state.store(OperatingState::NORMAL_OPERATION, std::memory_order_relaxed);
                 }
                 break;
@@ -91,4 +86,4 @@ public:
     [[nodiscard]] uint64_t get_mitigated_attacks() const noexcept { return total_attacks_mitigated; }
 };
 
-#endif // CYBER_RESILIENCE_ENGINE_HPP
+#endif 
