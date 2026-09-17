@@ -9,7 +9,7 @@ However, there are critical systems out there where even a sudden, minor distort
 * What if a patient's MRI machine or life-support system suddenly glitches during operation?<br>
 These threats aren't confined to upper-layer network traffic; They can happen at the hardware level, especially when an attacker can physically access to the circuit - by injecting voltage glitches or spoofed signal pulses directly into the line.<br>
 <br>
-**Objectives**: 
+**Objectives**: <br>
 This project looks beyond software-level network attacks to target hardware-level vulnerabilities. It is built to detect subtle malicious signals at the ADC(Analog-to-Digital Converter) / Sensor stage with ultra-low latency. <br>
 In safety-critical environments like high-frequency finance and medical tech, even micro-signal anomalies must be recognized instantly without nano or microsecond delays. To eliminate the execution overhead in higher-level managed languages, this engine is implemented using C++20 and Inline Assembly(0x86-64), checking whether the signal's integrity is broken or not by verifying it via direct register-level bitwise operations.<br>
 When an attack occurs, analyzing the vector or tracing the attacker isn't the most immediate priority-preventing the following, immediate damage is!
@@ -20,7 +20,7 @@ Therefore, this engine rather focuses on preventing immediate and irreversible h
 * Then, change it to a safe synthetic-backup mode without dropping a single CPU cycle.<br>
 By shifting focus from static defense to active resilience, the engine brings system downtime down to zero.<br>
 <br>
-**Performance Result**: 
+**Performance Result**: <br>
 
 
 - **Average Latency:** < 50 nanoseconds per packet.
