@@ -1,7 +1,4 @@
-/**
- * @file main.cpp
- * @brief Main Execution Testbench for Embedded Cyber Resilience Engine
- */
+// Main Execution Testbench for Embedded Cyber Resilience Engine
 
 #include "CyberResilienceEngine.hpp"
 #include <iostream>
@@ -12,8 +9,8 @@
 int main() {
     CyberResilienceEngine engine;
 
-    // 가상 ADC 하드웨어 버스 데이터 스트림
-    // (정상 -> 노이즈 2회 -> 피싱 공격 2회 -> 정상 복귀)
+    // Virtual ADC hardware bus data stream
+    // (Valid x2 -> Noise(normal) x2 -> ATTACK!! x2 -> Self Healing, back to Valid)
     const std::array<uint16_t, 8> raw_bus_stream = {
         0x04B0, // 1200 (Valid)
         0x0514, // 1300 (Valid)
