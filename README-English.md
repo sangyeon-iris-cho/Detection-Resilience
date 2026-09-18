@@ -21,3 +21,45 @@ Therefore, this engine rather focuses on preventing immediate and irreversible h
 By shifting focus from static defense to active resilience, the engine brings system downtime down to zero.<br>
 <br>
 **Performance Result**: <br>
+
+
+
+
+<br>
+<br>
+Check how Dependency Injection and parse_fast() and evaluate() is utilized from the injected parser. Illustration using the code is below: <br> 
+#ifndef HARDWARE_CYBER_RESILIENCE_ENGINE_HPP <br> 
+#define HARDWARE_CYBER_RESILIENCE_ENGINE_HPP <br> 
+ <br> 
+#include "BaseCyberResilienceEngine.hpp" <br> 
+#include "LowLatencyDetection.hpp" // Parser 접근 <br> 
+ <br> 
+class HardwareCyberResilienceEngine : public BaseCyberResilienceEngine { <br> 
+private: <br> 
+    std::unique_ptr<BaseLowLatencyParser> parser; <br> 
+ <br> 
+public: <br> 
+    explicit HardwareCyberResilienceEngine(std::unique_ptr<BaseLowLatencyParser> p) <br> 
+        : parser(std::move(p)) {} <br> 
+ <br> 
+    uint64_t process_pipeline(uint64_t raw_input) override { <br> 
+        // 1. Low-Latency bit-masking <br> 
+        uint64_t parsed = parser->parse_fast(raw_input); <br> 
+         <br> 
+        // 2. Integrity evaluation <br> 
+        SignalIntegrity status = parser->evaluate(parsed); <br> 
+ <br> 
+        // 3. Fallback logic if attacked/noise <br> 
+        if (status != SignalIntegrity::VALID) { <br> 
+            return generate_safe_fallback_signal(); // 부모/자식의 Safe-fail 값 리턴 <br> 
+        } <br> 
+        return parsed; <br> 
+    } <br> 
+ <br> 
+protected: <br> 
+    uint64_t generate_safe_fallback_signal() const noexcept override { <br> 
+        return 1500; // 하드웨어 안전 기본 전압 (1500mV) <br> 
+    } <br> 
+}; <br> 
+ <br> 
+#endif <br> 
