@@ -21,17 +21,3 @@ Therefore, this engine rather focuses on preventing immediate and irreversible h
 By shifting focus from static defense to active resilience, the engine brings system downtime down to zero.<br>
 <br>
 **Performance Result**: <br>
-
-
-- **Average Latency:** < 50 nanoseconds per packet.
-- **Memory Footprint:** Zero Dynamic Memory Allocation(`noexcept` / `#pragma push`).
-- **Standard Compliance:** Aligned with Siemens Healthineers SDL & CSMS requirements.
-
-
-
-## 🛠 Key Features
-1. **x86-64 Inline Assembly Masking:** Direct register-level `andw` operations achieving sub-microsecond processing.
-2. **Three-Tier Anomaly Classification:** Differentiates valid biomedical signals, ambient noise, and malicious spoofing attacks.
-3. **hardware-level bit masking**
-4. **Deterministic Safe-Fail State Machine:** Switches to a synthetic safe-mode instantly without system crashes or service interruptions. : under FDA & ISO 14971 standards.
-5. **Self-Healing Capability:** Automatically restores normal operations upon continuous valid signal telemetry detection.
