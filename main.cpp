@@ -1,65 +1,43 @@
-// Main Execution Testbench for Embedded Cyber Resilience Engine
-
-#include "CyberResilienceEngine.hpp"
 #include <iostream>
-#include <array>
-#include <iomanip>
-#include <string>
+#include <memory>
+
+// 1. Low-Latency 파서 헤더
+#include "LowLatencyDetection.hpp"
+
+// 2. Resilience Engine 헤더들 (반드시 접근/include 해야 함!)
+#include "HardwareCyberResilienceEngine.hpp"
+#include "NetworkCyberResilienceEngine.hpp"
 
 int main() {
-    CyberResilienceEngine engine;
+    // -------------------------------------------------------------
+    // A. 하드웨어 트랙 (HW Parser + HW Resilience Engine)
+    // -------------------------------------------------------------
+    std::cout << "=== 1. HARDWARE ADC TRACK ===\n";
+    
+    // Low-Latency HW Parser 생성
+    auto hw_parser = std::make_unique<HardwareADCParser>();
+    
+    // HW Cyber Resilience Engine 생성 (Parser 주입)
+    HardwareCyberResilienceEngine hw_engine(std::move(hw_parser));
 
-    // Virtual ADC hardware bus data stream
-    // (Valid x2 -> Noise(normal) x2 -> ATTACK!! x2 -> Self Healing, back to Valid)
-    const std::array<uint16_t, 8> raw_bus_stream = {
-        0x04B0, // 1200 (Valid)
-        0x0514, // 1300 (Valid)
-        0x012C, //  300 (Noise 1)
-        0x0190, //  400 (Noise 2 -> Safe-Fail Trigger)
-        0x0FFF, // 4095 (Spoofed Attack -> Immediate Safe-Fail)
-        0x0F40, // 3904 (Spoofed Attack)
-        0x0500, // 1280 (Valid -> Self Healing)
-        0x04E2  // 1250 (Valid)
-    };
+    uint16_t raw_adc_glitch = 0x3EFF; // 3967 (Attack Threshold 초과 신호)
+    uint64_t hw_out = hw_engine.process_pipeline(raw_adc_glitch);
+    std::cout << "HW Recovered Signal: " << hw_out << " mV\n\n";
 
-    std::cout << "============================================================================\n";
-    std::cout << " SIEMENS HEALTHINEERS TARGET: EMBEDDED CYBER RESILIENCE ENGINE\n";
-    std::cout << " C++20 & x86-64 Inline Assembly Anomaly Detection Testbench\n";
-    std::cout << "============================================================================\n\n";
+    // -------------------------------------------------------------
+    // B. 네트워크 트랙 (NW Parser + NW Resilience Engine)
+    // -------------------------------------------------------------
+    std::cout << "=== 2. NETWORK CAN BUS TRACK ===\n";
+    
+    // Low-Latency NW Parser 생성
+    auto net_parser = std::make_unique<NetworkPacketParser>();
+    
+    // NW Cyber Resilience Engine 생성 (Parser 주입)
+    NetworkCyberResilienceEngine net_engine(std::move(net_parser));
 
-    std::cout << std::left 
-              << std::setw(12) << "[Raw Hex]"
-              << std::setw(14) << "[Output ADC]"
-              << std::setw(18) << "[Integrity]"
-              << std::setw(22) << "[System State]"
-              << std::setw(15) << "[Latency]" << "\n";
-    std::cout << "----------------------------------------------------------------------------\n";
-
-    for (uint16_t raw_signal : raw_bus_stream) {
-        SignalTelemetry telemetry = engine.process_packet(raw_signal);
-
-        std::string integrity_str;
-        switch (telemetry.integrity) {
-            case SignalIntegrity::VALID:          integrity_str = "VALID"; break;
-            case SignalIntegrity::NOISE:          integrity_str = "NOISE_FILTERED"; break;
-            case SignalIntegrity::SPOOFED_ATTACK: integrity_str = "ATTACK_SPOOFED"; break;
-        }
-
-        std::string state_str = (engine.get_current_state() == OperatingState::NORMAL_OPERATION) 
-                                ? "NORMAL_MODE" 
-                                : "SAFE_FAIL_FALLBACK";
-
-        std::cout << std::hex << "0x" << std::setw(8) << std::setfill('0') << telemetry.raw_adc << std::setfill(' ') << std::dec
-                  << std::setw(14) << telemetry.processed_adc
-                  << std::setw(18) << integrity_str
-                  << std::setw(22) << state_str
-                  << std::setw(8) << telemetry.latency_nanoseconds << " ns\n";
-    }
-
-    std::cout << "----------------------------------------------------------------------------\n";
-    std::cout << " [SUMMARY] Total Packets: " << engine.get_total_packets() 
-              << " | Attacks Mitigated: " << engine.get_mitigated_attacks() << "\n";
-    std::cout << "============================================================================\n";
+    uint64_t raw_can_packet = 0x0000DEAD00001234ULL; // Spoofed Payload
+    uint64_t net_out = net_engine.process_pipeline(raw_can_packet);
+    std::cout << "Network Recovered Payload: " << net_out << "\n";
 
     return 0;
 }
