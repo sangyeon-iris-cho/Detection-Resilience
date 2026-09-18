@@ -1,4 +1,5 @@
 #include "CyberResilienceEngine.hpp"
+#include "LowLatencyDetection.hpp"
 
 class NetworkPacketEngine : public BaseCyberResilienceEngine {
 private:
