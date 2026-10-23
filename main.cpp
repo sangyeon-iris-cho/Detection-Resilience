@@ -9,9 +9,7 @@
 #include "NetworkCyberResilienceEngine.hpp"
 
 int main() {
-    // -------------------------------------------------------------
     // A. 하드웨어 트랙 (HW Parser + HW Resilience Engine)
-    // -------------------------------------------------------------
     std::cout << "=== 1. HARDWARE ADC TRACK ===\n";
     
     // Low-Latency HW Parser 생성
@@ -24,9 +22,8 @@ int main() {
     uint64_t hw_out = hw_engine.process_pipeline(raw_adc_glitch);
     std::cout << "HW Recovered Signal: " << hw_out << " mV\n\n";
 
-    // -------------------------------------------------------------
+    
     // B. 네트워크 트랙 (NW Parser + NW Resilience Engine)
-    // -------------------------------------------------------------
     std::cout << "=== 2. NETWORK CAN BUS TRACK ===\n";
     
     // Low-Latency NW Parser 생성
